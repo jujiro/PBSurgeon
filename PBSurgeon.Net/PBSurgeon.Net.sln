@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29102.190
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PBSurgeon", "PBSurgeon\PBSurgeon.csproj", "{4BD1D7E8-2121-4993-A372-ED6A6624D55D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTestProject1", "UnitTestProject1\UnitTestProject1.csproj", "{F7150F0B-B068-4B97-AC96-F05F28D5074D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4BD1D7E8-2121-4993-A372-ED6A6624D55D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4BD1D7E8-2121-4993-A372-ED6A6624D55D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4BD1D7E8-2121-4993-A372-ED6A6624D55D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4BD1D7E8-2121-4993-A372-ED6A6624D55D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F7150F0B-B068-4B97-AC96-F05F28D5074D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F7150F0B-B068-4B97-AC96-F05F28D5074D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F7150F0B-B068-4B97-AC96-F05F28D5074D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F7150F0B-B068-4B97-AC96-F05F28D5074D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B1B2F72C-889F-4F56-800D-D660E9F65607}
+	EndGlobalSection
+EndGlobal
