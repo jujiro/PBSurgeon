@@ -48,7 +48,8 @@ namespace PBSurgeon
                 else Console.WriteLine($"Measure, {m.Name} already exists.  It will be skipped.");
             else
                 Console.WriteLine($"Measure, {m.Name} will be added to the model.");
-            if (DryRun) return;
+            if (DryRun) 
+                return;
             if (tab.Measures.Contains(m.Name))
             {
                 var mx = tab.Measures[m.Name];
