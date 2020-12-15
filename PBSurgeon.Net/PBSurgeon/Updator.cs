@@ -22,7 +22,7 @@ namespace PBSurgeon
         /// Creates or updates the measure in the model
         /// </summary>
         /// <param name="m"></param>
-        public static void UpdateMeasure(Measure m, bool overwriteExisting=true)
+        public static void UpdateMeasure(Tab.Measure m, bool overwriteExisting = true)
         {
             var srv = new Tab.Server();
             try
@@ -37,25 +37,26 @@ namespace PBSurgeon
             Tab.Table tab;
             try
             {
-                tab = model.Tables[m.TableName];
+                tab = model.Tables[m.Table.Name];
             }
             catch
             {
-                throw new Exception($"Table not found, {m.TableName}");
+                throw new Exception($"Table not found, {m.Table.Name}");
             }
-            if (tab.Measures.Contains(m.Name) && DryRun)
-                if (overwriteExisting) Console.WriteLine($"Measure, {m.Name} already exists.  It will be updated.");
-                else Console.WriteLine($"Measure, {m.Name} already exists.  It will be skipped.");
-            else
-                Console.WriteLine($"Measure, {m.Name} will be added to the model.");
-            if (DryRun) 
+            if (DryRun)
+                if (tab.Measures.Contains(m.Name))
+                    if (overwriteExisting) Console.WriteLine($"Measure, {m.Name} already exists.  It will be updated.");
+                    else Console.WriteLine($"Measure, {m.Name} already exists.  It will be skipped.");
+                else
+                    Console.WriteLine($"Measure, {m.Name} will be added to the model.");
+            if (DryRun)
                 return;
             if (tab.Measures.Contains(m.Name))
             {
                 var mx = tab.Measures[m.Name];
                 mx.Expression = m.Expression;
                 if (!string.IsNullOrWhiteSpace(m.DisplayFolder)) mx.DisplayFolder = m.DisplayFolder;
-                if (!string.IsNullOrWhiteSpace(m.FormatMask)) mx.FormatString = m.FormatMask; //"#,0.00"  "0.0000%;-0.0000%;0.0000%"
+                if (!string.IsNullOrWhiteSpace(m.FormatString)) mx.FormatString = m.FormatString; //"#,0.00"  "0.0000%;-0.0000%;0.0000%"
                 if (Verbose) Console.WriteLine($"Measure, {m.Name} was updated.");
             }
             else
@@ -64,20 +65,73 @@ namespace PBSurgeon
                 mz.Name = m.Name;
                 mz.Expression = m.Expression;
                 if (!string.IsNullOrWhiteSpace(m.DisplayFolder)) mz.DisplayFolder = m.DisplayFolder;
-                if (!string.IsNullOrWhiteSpace(m.FormatMask)) mz.FormatString = m.FormatMask;
-                if (!string.IsNullOrWhiteSpace(m.Annotations)) mz.Annotations.Add(new Tab.Annotation() { Value = m.Annotations });
+                if (!string.IsNullOrWhiteSpace(m.FormatString)) mz.FormatString = m.FormatString;
+                if (!string.IsNullOrWhiteSpace(m.Description)) mz.Description = m.Description;
                 tab.Measures.Add(mz);
                 if (Verbose) Console.WriteLine($"Measure, {m.Name} was created.");
             }
-            try 
+            try
             {
                 model.SaveChanges();
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 model.UndoLocalChanges();
                 throw ex;
-            }            
+            }
         }
+        //public static void UpdateColumn(PBSurgeon.Column c, bool overwriteExisting = true)
+        //{
+        //    var srv = new Tab.Server();
+        //    try
+        //    {
+        //        srv.Connect(ConnectionString);
+        //    }
+        //    catch
+        //    {
+        //        throw new Exception("Unable to connect to the model");
+        //    }
+        //    var model = srv.Databases[0].Model;
+        //    Tab.Table tab;
+        //    //try
+        //    //{
+        //    //    //tab = model.Tables[c.TableName];
+        //    //}
+        //    //catch
+        //    //{
+        //    //    //throw new Exception($"Table not found, {c.TableName}");
+        //    //}
+        //    //if (DryRun)
+        //    //    if (tab.Columns.Contains(c.Name))
+        //    //        if (overwriteExisting) Console.WriteLine($"Column, {c.Name} already exists.  It will be updated.");
+        //    //        else Console.WriteLine($"Column, {c.Name} already exists.  It will be skipped.");
+        //    //    else
+        //    //        Console.WriteLine($"Column, {c.Name} will be added to the model.");
+        //    //if (DryRun)
+        //    //    return;
+        //    //if (tab.Columns.Contains(c.Name))
+        //    //{
+        //    //    var mx = tab.Columns[c.Name];
+        //    //    mx.DataType = c.DataType;
+        //    //    if (!string.IsNullOrWhiteSpace(c.Description)) mx.Description = c.Description;
+        //    //    if (!string.IsNullOrWhiteSpace(c.DisplayFolder)) mx.DisplayFolder = c.DisplayFolder;
+        //    //    if (!string.IsNullOrWhiteSpace(c.FormatMask)) mx.FormatString = c.FormatMask; //"#,0.00"  "0.0000%;-0.0000%;0.0000%"
+        //    //    if (Verbose) Console.WriteLine($"Column, {c.Name} was updated.");
+        //    //}
+
+
+
+
+        //    try
+        //    {
+        //        model.SaveChanges();
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        model.UndoLocalChanges();
+        //        throw ex;
+        //    }
+
+        //}
     }
 }

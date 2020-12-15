@@ -1,26 +1,47 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using PBSurgeon;
+using Tab = Microsoft.AnalysisServices.Tabular;
 
 namespace UnitTestProject1
 {
     [TestClass]
     public class UnitTest1
     {
-        string connStr = "localhost:49883";
+        string connStr = "localhost:50051";
+        [TestMethod]
+        public void DumpRawSchema()
+        {
+            PBSurgeon.Reporter.ConnectionString=connStr;
+            var s = PBSurgeon.Reporter.DumpRawSchema();
+        }
         [TestMethod]
         public void DumpSchema()
         {
-            PBSurgeon.Reporter.ConnectionString=connStr;
+            PBSurgeon.Reporter.ConnectionString = connStr;
             var s = PBSurgeon.Reporter.DumpSchema();
+            Console.WriteLine(s);
         }
         [TestMethod]
-        public void InsertMEasure()
+        public void InsertMeasure()
         {
             PBSurgeon.Updator.ConnectionString = connStr;
-            PBSurgeon.Updator.DryRun = true;
+            PBSurgeon.Updator.DryRun = false;
             PBSurgeon.Updator.Verbose = true;
-            PBSurgeon.Updator.UpdateMeasure(new Measure("Sales", "AshMeasure", "SUM([TaxAmt])", null, null), true);
+            var m = new Tab.Measure();
+            
+            m.Table.Name = "Sales";
+            m.Name = "AshMeasure";
+            m.Expression = "SUM([TaxAmt]) / 10";
+            PBSurgeon.Updator.UpdateMeasure(m, true);
+        }
+        [TestMethod]
+        public void InsertColumn()
+        {
+            PBSurgeon.Updator.ConnectionString = connStr;
+            PBSurgeon.Updator.DryRun = false;
+            PBSurgeon.Updator.Verbose = true;
+            //PBSurgeon.Updator.UpdateColumn(new PBSurgeon.Column("Sales", "SalesAmount", Tab.DataType.Decimal, ""), true);
         }
     }
 }
