@@ -14,7 +14,7 @@ namespace PBSurgeon
     /// </summary>
     public static class Reporter
     {
-        static string indent = "\t";
+        static string indent = "    ";
         static string separatorLine = "================================";
         /// <summary>
         /// Must be set before any of the methods are called.
@@ -41,7 +41,7 @@ namespace PBSurgeon
             srv.Connect(ConnectionString);
             var model = srv.Databases[0].Model;
             var sch = new PBSurgeon.Schema();
-            foreach (var t in model.Tables)
+            foreach (var t in model.Tables.OrderBy(x=>x.Name).ToList())
             {
                 var tab = new PBSurgeon.Table
                 {
@@ -50,7 +50,7 @@ namespace PBSurgeon
                     ExcludeFromModelRefresh = t.ExcludeFromModelRefresh,
                     Description = t.Description
                 };
-                foreach (var par in t.Partitions)
+                foreach (var par in t.Partitions.OrderBy(x=>x.Name).ToList())
                 {
                     var part = new PBSurgeon.Partition
                     {
@@ -104,9 +104,11 @@ namespace PBSurgeon
                     };
                     tab.Fields.Add(fl);
                 }
+                // Let us reorder the fields alphabetically.
+                tab.Fields = tab.Fields.OrderBy(x => x.Name).ToList();
                 sch.Tables.Add(tab);
             }
-            foreach (var p in model.Expressions)
+            foreach (var p in model.Expressions.OrderBy(x => x.Name).ToList())
             {
                 var param = new PBSurgeon.Parameter
                 {
@@ -117,6 +119,7 @@ namespace PBSurgeon
                 };
                 sch.Parameters.Add(param);
             }
+
             return sch;
         }
         /// <summary>
@@ -156,6 +159,9 @@ namespace PBSurgeon
             {
                 Console.WriteLine("{0}{1}", GetLeftIndent(level), t.Name);
             }
+            level = 0;
+            Console.WriteLine("{0}Details", GetLeftIndent(level));
+
             level = 1;
             Console.WriteLine();
             Console.WriteLine("{0}Parameters:", GetLeftIndent(level));
@@ -163,24 +169,69 @@ namespace PBSurgeon
             foreach (var p in sch.Parameters)
             {
                 Console.WriteLine("{0}Name: {1}", GetLeftIndent(level), p.Name);
+                Console.WriteLine("{0}Description: {1}", GetLeftIndent(level), p.Description);
+                Console.WriteLine("{0}Kind: {1}", GetLeftIndent(level), p.Kind);
+                Console.WriteLine("{0}Expression: {1}", GetLeftIndent(level), p.Expression);
                 Console.WriteLine("{0}{1}", GetLeftIndent(level), separatorLine);
                 Console.WriteLine();
             }
             Console.WriteLine();
 
-            level = 0;
-            Console.WriteLine("{0}Details", GetLeftIndent(level));
             level = 1;
             Console.WriteLine("{0}Tables:", GetLeftIndent(level));
             level++;
             foreach (var t in sch.Tables)
             {
                 Console.WriteLine("{0}Name: {1}", GetLeftIndent(level), t.Name);
+                Console.WriteLine("{0}Description: {1}", GetLeftIndent(level), t.Description);
+                Console.WriteLine("{0}IsHidden: {1}", GetLeftIndent(level), t.IsHidden);
+                Console.WriteLine("{0}Exclude from model refresh: {1}", GetLeftIndent(level), t.ExcludeFromModelRefresh);
+                Console.WriteLine("{0}{1}", GetLeftIndent(level), separatorLine);
+                Console.WriteLine();
+            }
+
+            level = 1;
+            Console.WriteLine("{0}Columns and measures:", GetLeftIndent(level));
+            level++;
+            foreach (var t in sch.Tables)
+            {
+                Console.WriteLine("{0}Table: {1}", GetLeftIndent(level), t.Name);
+                level++;
+                foreach (var c in t.Fields)
+                {
+                    Console.WriteLine("{0}{1}", GetLeftIndent(level), c.Name);
+                    level++;
+                    Console.WriteLine("{0}Source column: {1}", GetLeftIndent(level), c.SourceColumnName);
+                    Console.WriteLine("{0}Field type: {1}", GetLeftIndent(level), c.FieldType);
+                    Console.WriteLine("{0}Data type: {1}", GetLeftIndent(level), c.DataType);
+                    Console.WriteLine("{0}Description: {1}", GetLeftIndent(level), c.Description); 
+                    Console.WriteLine("{0}Format string: {1}", GetLeftIndent(level), c.FormatString);
+                    Console.WriteLine("{0}Display folder: {1}", GetLeftIndent(level), c.DisplayFolder);                    
+                    Console.WriteLine("{0}Type: {1}", GetLeftIndent(level), c.Type);
+                    if ((new List<string> { FieldType.CalculatedColumn, FieldType.Measure }).Contains(c.FieldType))
+                    {
+                        Console.WriteLine("{0}Expression:", GetLeftIndent(level));
+                        DumpExpression(level + 1, c.Expression);
+                    }
+                        
+                    Console.WriteLine();
+                    level--;
+                }
+                level--;
                 Console.WriteLine("{0}{1}", GetLeftIndent(level), separatorLine);
                 Console.WriteLine();
             }
             Console.WriteLine("End report");
         }
+        private static void DumpExpression(int level, string expression)
+        {
+            var lines = (expression.Split(new string[] { "\r\n", "\n" }, StringSplitOptions.None)).ToList();
+            foreach (var line in lines)
+            {
+                Console.WriteLine("{0}{1}", GetLeftIndent(level), line);
+            }
+        }
+
         private static string GetLeftIndent(int level)
         {
             if (level == 0) return "";
