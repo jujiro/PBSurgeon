@@ -14,6 +14,8 @@ namespace PBSurgeon
     /// </summary>
     public static class Reporter
     {
+        static string indent = "\t";
+        static string separatorLine = "================================";
         /// <summary>
         /// Must be set before any of the methods are called.
         /// </summary>
@@ -33,11 +35,7 @@ namespace PBSurgeon
                                                                                 ReferenceLoopHandling = ReferenceLoopHandling.Ignore
                                                                             });
         }
-        /// <summary>
-        /// Creates a simplified JSON schema for an existing model
-        /// </summary>
-        /// <returns></returns>
-        public static string DumpSchema()
+        public static Schema ExtractSchema()
         {
             var srv = new Tab.Server();
             srv.Connect(ConnectionString);
@@ -119,19 +117,74 @@ namespace PBSurgeon
                 };
                 sch.Parameters.Add(param);
             }
+            return sch;
+        }
+        /// <summary>
+        /// Creates a simplified JSON schema for a model
+        /// </summary>
+        /// <returns></returns>
+        public static string DumpSchema()
+        {
+            var sch = ExtractSchema();
             return JsonConvert.SerializeObject(sch, Formatting.Indented, new JsonSerializerSettings()
             {
                 ReferenceLoopHandling = ReferenceLoopHandling.Ignore
             });
         }
         /// <summary>
-        /// Compares the schema supplied in schemaToCompare (JSON) and reports any differences.
+        /// Prints a simplified JSON schema
         /// </summary>
-        /// <param name="SchemaToCompare"></param>
         /// <returns></returns>
-        public static string FindDifferences(string SchemaToCompare)
+        public static void PrintSchema()
         {
-            throw new NotImplementedException();
+            var level = 0;
+            var sch = ExtractSchema();
+            Console.WriteLine("{0}Date: {1:MM/dd/yyyy H:mm:ss}", GetLeftIndent(level), DateTime.Now);
+            Console.WriteLine("{0}Model: {1}",GetLeftIndent(level), ConnectionString);
+            Console.WriteLine("{0}Summary", GetLeftIndent(level));
+            level++;
+            Console.WriteLine("{0}Parameters: {1}", GetLeftIndent(level), sch.Parameters.Count);
+            level++;
+            foreach (var p in sch.Parameters)
+            {
+                Console.WriteLine("{0}{1}", GetLeftIndent(level), p.Name);
+            }
+            level--;
+            Console.WriteLine("{0}Tables: {1}", GetLeftIndent(level), sch.Tables.Count);
+            level++;
+            foreach (var t in sch.Tables)
+            {
+                Console.WriteLine("{0}{1}", GetLeftIndent(level), t.Name);
+            }
+            level = 1;
+            Console.WriteLine();
+            Console.WriteLine("{0}Parameters:", GetLeftIndent(level));
+            level++;
+            foreach (var p in sch.Parameters)
+            {
+                Console.WriteLine("{0}Name: {1}", GetLeftIndent(level), p.Name);
+                Console.WriteLine("{0}{1}", GetLeftIndent(level), separatorLine);
+                Console.WriteLine();
+            }
+            Console.WriteLine();
+
+            level = 0;
+            Console.WriteLine("{0}Details", GetLeftIndent(level));
+            level = 1;
+            Console.WriteLine("{0}Tables:", GetLeftIndent(level));
+            level++;
+            foreach (var t in sch.Tables)
+            {
+                Console.WriteLine("{0}Name: {1}", GetLeftIndent(level), t.Name);
+                Console.WriteLine("{0}{1}", GetLeftIndent(level), separatorLine);
+                Console.WriteLine();
+            }
+            Console.WriteLine("End report");
+        }
+        private static string GetLeftIndent(int level)
+        {
+            if (level == 0) return "";
+            return String.Concat(Enumerable.Repeat(indent, level));
         }
     }
 }

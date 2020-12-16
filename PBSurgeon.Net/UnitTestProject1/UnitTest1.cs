@@ -23,6 +23,12 @@ namespace UnitTestProject1
             Console.WriteLine(s);
         }
         [TestMethod]
+        public void PrintSchema()
+        {
+            PBSurgeon.Reporter.ConnectionString = connStr;
+            PBSurgeon.Reporter.PrintSchema();            
+        }
+        [TestMethod]
         public void InsertMeasure()
         {
             PBSurgeon.Updator.ConnectionString = connStr;
