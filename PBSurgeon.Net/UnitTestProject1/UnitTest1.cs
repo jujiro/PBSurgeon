@@ -10,6 +10,12 @@ namespace UnitTestProject1
     {
         string connStr = "localhost:50051";
         [TestMethod]
+        public void GetConnections()
+        {
+            PBSurgeon.Connector.GetActiveConnections();
+            var x = PBSurgeon.Connector.Connections;
+        }
+        [TestMethod]
         public void DumpRawSchema()
         {
             PBSurgeon.Reporter.ConnectionString=connStr;
