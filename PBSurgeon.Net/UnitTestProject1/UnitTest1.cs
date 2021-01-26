@@ -8,7 +8,7 @@ namespace UnitTestProject1
     [TestClass]
     public class UnitTest1
     {
-        string connStr = "localhost:50051";
+        string connStr = "localhost:56192";
         [TestMethod]
         public void GetConnections()
         {
@@ -40,12 +40,13 @@ namespace UnitTestProject1
             PBSurgeon.Updator.ConnectionString = connStr;
             PBSurgeon.Updator.DryRun = false;
             PBSurgeon.Updator.Verbose = true;
-            var m = new Tab.Measure();
-            
-            m.Table.Name = "Sales";
-            m.Name = "AshMeasure";
-            m.Expression = "SUM([TaxAmt]) / 10";
-            PBSurgeon.Updator.UpdateMeasure(m, true);
+            var fld = new PBSurgeon.Field();            
+            fld.TableName = "Category";
+            fld.FieldType = PBSurgeon.FieldType.Measure;
+            fld.Name = "A5";
+            fld.FormatString = "#,0.0";
+            fld.Expression = "13.34 * 3.445566";
+            PBSurgeon.Updator.UpsertField(fld, true);
         }
         [TestMethod]
         public void InsertColumn()

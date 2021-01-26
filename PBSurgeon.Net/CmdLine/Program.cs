@@ -13,14 +13,15 @@ namespace CmdLine
         //}
         public static async Task<int> Main(params string[] args)
         {
-            RootCommand rootCommand = new RootCommand(
-              description: "Converts an image file from one format to another."
-              , treatUnmatchedTokensAsErrors: true);
-            MethodInfo method = typeof(Program).GetMethod(nameof(Convert));
-            rootCommand.ConfigureFromMethod(method);
-            rootCommand.Children["--input"].AddAlias("-i");
-            rootCommand.Children["--output"].AddAlias("-o");
-            return await rootCommand.InvokeAsync(args);
+            //RootCommand rootCommand = new RootCommand(
+            //  description: "Converts an image file from one format to another."
+            //  , treatUnmatchedTokensAsErrors: true);
+            //MethodInfo method = typeof(Program).GetMethod(nameof(Convert));
+            //rootCommand.ConfigureFromMethod(method);
+            //rootCommand.Children["--input"].AddAlias("-i");
+            //rootCommand.Children["--output"].AddAlias("-o");
+            //return await rootCommand.InvokeAsync(args);
+            throw new NotImplementedException();
         }
 
     }

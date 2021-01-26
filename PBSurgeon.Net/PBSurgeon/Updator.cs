@@ -16,13 +16,18 @@ namespace PBSurgeon
         /// Must be set before any of the methods are called.
         /// </summary>
         public static string ConnectionString { get; set; }
-        public static bool DryRun = false;
-        public static bool Verbose = true;
+        public static bool DryRun { get; set; }
+        public static bool Verbose { get; set; }
+        static Updator()
+        {
+            DryRun = false;
+            Verbose = false;
+        }
         /// <summary>
         /// Creates or updates the measure in the model
         /// </summary>
-        /// <param name="m"></param>
-        public static void UpdateMeasure(Tab.Measure m, bool overwriteExisting = true)
+        /// <param name="f"></param>
+        public static void UpsertField(Field f, bool overwriteExisting = true)
         {
             var srv = new Tab.Server();
             try
@@ -37,42 +42,82 @@ namespace PBSurgeon
             Tab.Table tab;
             try
             {
-                tab = model.Tables[m.Table.Name];
+                tab = model.Tables[f.TableName];
             }
             catch
             {
-                throw new Exception($"Table not found, {m.Table.Name}");
+                throw new Exception($"Table not found, {f.TableName}");
             }
-            if (DryRun)
-                if (tab.Measures.Contains(m.Name))
-                    if (overwriteExisting) Console.WriteLine($"Measure, {m.Name} already exists.  It will be updated.");
-                    else Console.WriteLine($"Measure, {m.Name} already exists.  It will be skipped.");
-                else
-                    Console.WriteLine($"Measure, {m.Name} will be added to the model.");
+            if (Verbose)
+            {
+                switch (f.FieldType)
+                {
+                    case FieldType.CalculatedColumn:
+                    case FieldType.Column:
+                        if (tab.Columns.Contains(f.Name))
+                            if (overwriteExisting) Console.WriteLine($"Column, {f.Name} already exists.  It will be updated.");
+                            else Console.WriteLine($"Column, {f.Name} already exists.  It will be skipped.");
+                        else
+                            Console.WriteLine($"Column, {f.Name} will be added to the model.");
+                        break;
+                    case FieldType.Measure:
+                        if (tab.Measures.Contains(f.Name))
+                            if (overwriteExisting) Console.WriteLine($"Measure, {f.Name} already exists.  It will be updated.");
+                            else Console.WriteLine($"Measure, {f.Name} already exists.  It will be skipped.");
+                        else
+                            Console.WriteLine($"Measure, {f.Name} will be added to the model.");
+                        break;
+                    default:
+                        throw new Exception("Unrecognized field type");
+                }
+            }
             if (DryRun)
                 return;
-            if (tab.Measures.Contains(m.Name))
+            var exists = false;
+            switch (f.FieldType)
             {
-                var mx = tab.Measures[m.Name];
-                mx.Expression = m.Expression;
-                if (!string.IsNullOrWhiteSpace(m.DisplayFolder)) mx.DisplayFolder = m.DisplayFolder;
-                if (!string.IsNullOrWhiteSpace(m.FormatString)) mx.FormatString = m.FormatString; //"#,0.00"  "0.0000%;-0.0000%;0.0000%"
-                if (Verbose) Console.WriteLine($"Measure, {m.Name} was updated.");
-            }
-            else
-            {
-                var mz = new Tab.Measure();
-                mz.Name = m.Name;
-                mz.Expression = m.Expression;
-                if (!string.IsNullOrWhiteSpace(m.DisplayFolder)) mz.DisplayFolder = m.DisplayFolder;
-                if (!string.IsNullOrWhiteSpace(m.FormatString)) mz.FormatString = m.FormatString;
-                if (!string.IsNullOrWhiteSpace(m.Description)) mz.Description = m.Description;
-                tab.Measures.Add(mz);
-                if (Verbose) Console.WriteLine($"Measure, {m.Name} was created.");
+                case FieldType.CalculatedColumn:
+                    exists = tab.Columns.Contains(f.Name);
+                    var mc = new Tab.CalculatedColumn();
+                    if (exists) mc = (Tab.CalculatedColumn)tab.Columns[f.Name];
+                    mc.Name = f.Name;
+                    mc.DisplayFolder = f.DisplayFolder;
+                    mc.FormatString = f.FormatString; //"#,0.00"  "0.0000%;-0.0000%;0.0000%"
+                    //mc.SortByColumn = f.SortByColumn;
+                    mc.Expression = f.Expression;
+                    if (!exists) tab.Columns.Add(mc);
+                    break;
+                case FieldType.Column:
+                    exists = tab.Columns.Contains(f.Name);
+                    var mx = new Tab.DataColumn();
+                    if (exists) mx = (Tab.DataColumn)tab.Columns[f.Name];
+                    mx.Name = f.Name;
+                    mx.DisplayFolder = f.DisplayFolder;
+                    mx.FormatString = f.FormatString; //"#,0.00"  "0.0000%;-0.0000%;0.0000%"
+                    mx.SourceColumn = string.IsNullOrWhiteSpace(f.SourceColumnName)?mx.Name:f.SourceColumnName;
+                    if (exists) tab.Columns.Add(mx);
+                    break;
+                case FieldType.Measure:
+                    exists = tab.Measures.Contains(f.Name);
+                    var mr = new Tab.Measure();
+                    if (exists) mr = tab.Measures[f.Name];
+                    mr.Name = f.Name;
+                    mr.DisplayFolder = f.DisplayFolder;
+                    mr.FormatString = f.FormatString; //"#,0.00"  "0.0000%;-0.0000%;0.0000%"
+                    //mc.SortByColumn = f.SortByColumn;
+                    mr.Expression = f.Expression;
+                    if (!exists) tab.Measures.Add(mr);
+                    break;
+                default:
+                    throw new Exception("Unrecognized field type");
             }
             try
             {
                 model.SaveChanges();
+                if (exists)
+                    Console.WriteLine($"{f.FieldType}, {f.Name} updated in the model.");
+                else
+                    Console.WriteLine($"{f.FieldType}, {f.Name} added to the model.");
             }
             catch (Exception ex)
             {
@@ -80,58 +125,5 @@ namespace PBSurgeon
                 throw ex;
             }
         }
-        //public static void UpdateColumn(PBSurgeon.Column c, bool overwriteExisting = true)
-        //{
-        //    var srv = new Tab.Server();
-        //    try
-        //    {
-        //        srv.Connect(ConnectionString);
-        //    }
-        //    catch
-        //    {
-        //        throw new Exception("Unable to connect to the model");
-        //    }
-        //    var model = srv.Databases[0].Model;
-        //    Tab.Table tab;
-        //    //try
-        //    //{
-        //    //    //tab = model.Tables[c.TableName];
-        //    //}
-        //    //catch
-        //    //{
-        //    //    //throw new Exception($"Table not found, {c.TableName}");
-        //    //}
-        //    //if (DryRun)
-        //    //    if (tab.Columns.Contains(c.Name))
-        //    //        if (overwriteExisting) Console.WriteLine($"Column, {c.Name} already exists.  It will be updated.");
-        //    //        else Console.WriteLine($"Column, {c.Name} already exists.  It will be skipped.");
-        //    //    else
-        //    //        Console.WriteLine($"Column, {c.Name} will be added to the model.");
-        //    //if (DryRun)
-        //    //    return;
-        //    //if (tab.Columns.Contains(c.Name))
-        //    //{
-        //    //    var mx = tab.Columns[c.Name];
-        //    //    mx.DataType = c.DataType;
-        //    //    if (!string.IsNullOrWhiteSpace(c.Description)) mx.Description = c.Description;
-        //    //    if (!string.IsNullOrWhiteSpace(c.DisplayFolder)) mx.DisplayFolder = c.DisplayFolder;
-        //    //    if (!string.IsNullOrWhiteSpace(c.FormatMask)) mx.FormatString = c.FormatMask; //"#,0.00"  "0.0000%;-0.0000%;0.0000%"
-        //    //    if (Verbose) Console.WriteLine($"Column, {c.Name} was updated.");
-        //    //}
-
-
-
-
-        //    try
-        //    {
-        //        model.SaveChanges();
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        model.UndoLocalChanges();
-        //        throw ex;
-        //    }
-
-        //}
     }
 }

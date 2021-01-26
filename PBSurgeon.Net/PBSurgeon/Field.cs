@@ -13,6 +13,7 @@ namespace PBSurgeon
     public class Field
     {
         public string Name { get; set; }
+        public string TableName { get; set; }
         public string SourceColumnName { get; set; }
         public string FormatString { get; set; }
         public string DisplayFolder { get; set; }
@@ -26,5 +27,11 @@ namespace PBSurgeon
         /// Applies to calculated column and measures only.
         /// </summary>
         public string Expression { get; set; }
+        public Field()
+        {
+            Description = "";
+            FormatString = "";
+            DisplayFolder = "";
+        }
     }
 }
