@@ -8,7 +8,7 @@ namespace UnitTestProject1
     [TestClass]
     public class UnitTest1
     {
-        string connStr = "localhost:56192";
+        string connStr = "localhost:59491";
         [TestMethod]
         public void GetConnections()
         {
@@ -54,7 +54,28 @@ namespace UnitTestProject1
             PBSurgeon.Updator.ConnectionString = connStr;
             PBSurgeon.Updator.DryRun = false;
             PBSurgeon.Updator.Verbose = true;
-            //PBSurgeon.Updator.UpdateColumn(new PBSurgeon.Column("Sales", "SalesAmount", Tab.DataType.Decimal, ""), true);
+            var fld = new PBSurgeon.Field();
+            fld.TableName = "Sales";
+            fld.FieldType = PBSurgeon.FieldType.CalculatedColumn;
+            fld.Name = "CalcCol1";
+            fld.FormatString = "#,0.0";
+            fld.Expression = "[UnitPrice] * [TotalProductCost]";
+            PBSurgeon.Updator.UpsertField(fld, true);
+        }
+        [TestMethod]
+        public void InsertColumn2()
+        {
+            PBSurgeon.Updator.ConnectionString = connStr;
+            PBSurgeon.Updator.DryRun = false;
+            PBSurgeon.Updator.Verbose = true;
+            var fld = new PBSurgeon.Field();
+            fld.TableName = "Sales";
+            fld.FieldType = PBSurgeon.FieldType.Column;
+            fld.Name = "CalcCol2";
+            fld.FormatString = "#,0.0000000";
+            fld.SourceColumnName = "[UnitPrice]";
+            //fld.Expression = "[UnitPrice] * [TotalProductCost]";
+            PBSurgeon.Updator.UpsertField(fld, true);
         }
     }
 }

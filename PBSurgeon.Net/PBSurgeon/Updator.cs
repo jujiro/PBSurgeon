@@ -91,11 +91,20 @@ namespace PBSurgeon
                     exists = tab.Columns.Contains(f.Name);
                     var mx = new Tab.DataColumn();
                     if (exists) mx = (Tab.DataColumn)tab.Columns[f.Name];
+
+
+
+                    // This needs to be changed to accommodate other data types.
+                    mx.DataType = Tab.DataType.String;
+                    
+                    
+                    
+                    
                     mx.Name = f.Name;
                     mx.DisplayFolder = f.DisplayFolder;
                     mx.FormatString = f.FormatString; //"#,0.00"  "0.0000%;-0.0000%;0.0000%"
                     mx.SourceColumn = string.IsNullOrWhiteSpace(f.SourceColumnName)?mx.Name:f.SourceColumnName;
-                    if (exists) tab.Columns.Add(mx);
+                    if (!exists) tab.Columns.Add(mx);
                     break;
                 case FieldType.Measure:
                     exists = tab.Measures.Contains(f.Name);
