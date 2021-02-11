@@ -8,7 +8,7 @@ namespace UnitTestProject1
     [TestClass]
     public class UnitTest1
     {
-        string connStr = "localhost:59491";
+        string connStr = "localhost:54166";
         [TestMethod]
         public void GetConnections()
         {
@@ -34,6 +34,23 @@ namespace UnitTestProject1
             PBSurgeon.Reporter.ConnectionString = connStr;
             PBSurgeon.Reporter.PrintSchema();            
         }
+        [TestMethod]
+        public void RenameTable()
+        {
+            PBSurgeon.Renamer.ConnectionString = connStr;
+            PBSurgeon.Renamer.DryRun = false;
+            PBSurgeon.Renamer.Verbose = true;
+            PBSurgeon.Renamer.RenameTable("Sales", "NewSales");
+        }
+        [TestMethod]
+        public void RenameColumn()
+        {
+            PBSurgeon.Renamer.ConnectionString = connStr;
+            PBSurgeon.Renamer.DryRun = false;
+            PBSurgeon.Renamer.Verbose = true;
+            PBSurgeon.Renamer.RenameColumn("Sales", "DiscAmount", "DiscountAmount");
+        }
+
         [TestMethod]
         public void InsertMeasure()
         {

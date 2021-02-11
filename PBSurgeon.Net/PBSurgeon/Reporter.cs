@@ -16,6 +16,7 @@ namespace PBSurgeon
     {
         static string indent = "    ";
         static string separatorLine = "================================";
+        static string parameterQuery = "IsParameterQuery=true";
         /// <summary>
         /// Must be set before any of the methods are called.
         /// </summary>
@@ -31,9 +32,9 @@ namespace PBSurgeon
             srv.Connect(ConnectionString);
             var model = srv.Databases[0].Model;
             return JsonConvert.SerializeObject(model, Formatting.Indented, new JsonSerializerSettings()
-                                                                            {
-                                                                                ReferenceLoopHandling = ReferenceLoopHandling.Ignore
-                                                                            });
+            {
+                ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+            });
         }
         public static Schema ExtractSchema()
         {
@@ -41,7 +42,7 @@ namespace PBSurgeon
             srv.Connect(ConnectionString);
             var model = srv.Databases[0].Model;
             var sch = new PBSurgeon.Schema();
-            foreach (var t in model.Tables.OrderBy(x=>x.Name).ToList())
+            foreach (var t in model.Tables.OrderBy(x => x.Name).ToList())
             {
                 var tab = new PBSurgeon.Table
                 {
@@ -50,7 +51,7 @@ namespace PBSurgeon
                     ExcludeFromModelRefresh = t.ExcludeFromModelRefresh,
                     Description = t.Description
                 };
-                foreach (var par in t.Partitions.OrderBy(x=>x.Name).ToList())
+                foreach (var par in t.Partitions.OrderBy(x => x.Name).ToList())
                 {
                     var part = new PBSurgeon.Partition
                     {
@@ -110,16 +111,18 @@ namespace PBSurgeon
             }
             foreach (var p in model.Expressions.OrderBy(x => x.Name).ToList())
             {
-                var param = new PBSurgeon.Parameter
+                if (p.Expression.Contains(parameterQuery))
                 {
-                    Name = p.Name,
-                    Description = p.Description,
-                    Expression = p.Expression,
-                    Kind = p.Kind.ToString()
-                };
-                sch.Parameters.Add(param);
+                    var param = new PBSurgeon.Parameter
+                    {
+                        Name = p.Name,
+                        Description = p.Description,
+                        Expression = p.Expression,
+                        Kind = p.Kind.ToString()
+                    };
+                    sch.Parameters.Add(param);
+                }
             }
-
             return sch;
         }
         /// <summary>
@@ -143,7 +146,7 @@ namespace PBSurgeon
             var level = 0;
             var sch = ExtractSchema();
             Console.WriteLine("{0}Date: {1:MM/dd/yyyy H:mm:ss}", GetLeftIndent(level), DateTime.Now);
-            Console.WriteLine("{0}Model: {1}",GetLeftIndent(level), ConnectionString);
+            Console.WriteLine("{0}Model: {1}", GetLeftIndent(level), ConnectionString);
             Console.WriteLine("{0}Summary", GetLeftIndent(level));
             level++;
             Console.WriteLine("{0}Parameters: {1}", GetLeftIndent(level), sch.Parameters.Count);
@@ -158,6 +161,21 @@ namespace PBSurgeon
             foreach (var t in sch.Tables)
             {
                 Console.WriteLine("{0}{1}", GetLeftIndent(level), t.Name);
+                if (t.Partitions.Count > 0)
+                {
+                    level++;
+                    Console.WriteLine("{0}This table contains {1} partitions.", GetLeftIndent(level), t.Partitions.Count);
+                    foreach (var part in t.Partitions)
+                    {
+                        Console.WriteLine("{0}Name: {1}", GetLeftIndent(level), part.Name);
+                        Console.WriteLine("{0}Mode: {1}", GetLeftIndent(level), part.Mode);
+                        Console.WriteLine("{0}Kind: {1}", GetLeftIndent(level), part.Kind);
+                        Console.WriteLine("{0}Expression:", GetLeftIndent(level));
+                        Console.WriteLine(AlignExpression(part.Expression, level + 1));
+                        Console.WriteLine();
+                    }
+                    level--;
+                }
             }
             level = 0;
             Console.WriteLine("{0}Details", GetLeftIndent(level));
@@ -204,16 +222,16 @@ namespace PBSurgeon
                     Console.WriteLine("{0}Source column: {1}", GetLeftIndent(level), c.SourceColumnName);
                     Console.WriteLine("{0}Field type: {1}", GetLeftIndent(level), c.FieldType);
                     Console.WriteLine("{0}Data type: {1}", GetLeftIndent(level), c.DataType);
-                    Console.WriteLine("{0}Description: {1}", GetLeftIndent(level), c.Description); 
+                    Console.WriteLine("{0}Description: {1}", GetLeftIndent(level), c.Description);
                     Console.WriteLine("{0}Format string: {1}", GetLeftIndent(level), c.FormatString);
-                    Console.WriteLine("{0}Display folder: {1}", GetLeftIndent(level), c.DisplayFolder);                    
+                    Console.WriteLine("{0}Display folder: {1}", GetLeftIndent(level), c.DisplayFolder);
                     Console.WriteLine("{0}Type: {1}", GetLeftIndent(level), c.Type);
                     if ((new List<string> { FieldType.CalculatedColumn, FieldType.Measure }).Contains(c.FieldType))
                     {
                         Console.WriteLine("{0}Expression:", GetLeftIndent(level));
                         DumpExpression(level + 1, c.Expression);
                     }
-                        
+
                     Console.WriteLine();
                     level--;
                 }
@@ -236,6 +254,17 @@ namespace PBSurgeon
         {
             if (level == 0) return "";
             return String.Concat(Enumerable.Repeat(indent, level));
+        }
+        private static string AlignExpression(string expression, int level)
+        {
+            if (expression == null) return "";
+            var ret = new StringBuilder("");
+            var lines = expression.Split(new string[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+            foreach (var line in lines)
+            {
+                ret.AppendLine(GetLeftIndent(level) + line);
+            }
+            return ret.ToString();
         }
     }
 }
